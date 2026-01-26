@@ -7,7 +7,7 @@ WORKDIR /var/www/html
 COPY . .
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts
 RUN composer dump-autoload
-RUN php artisan key:generate --force
+ENV APP_KEY="base64:WCsh7Denu0ebpDtZKxOpvuQL44dSLgdPYHl7yUUde4A="
 RUN chown -R www-data:www-data storage bootstrap/cache
 EXPOSE 80
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
