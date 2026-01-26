@@ -9,5 +9,5 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-d
 RUN composer dump-autoload
 ENV APP_KEY="base64:WCsh7Denu0ebpDtZKxOpvuQL44dSLgdPYHl7yUUde4A="
 RUN chown -R www-data:www-data storage bootstrap/cache
-EXPOSE 80
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
+EXPOSE 3000
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=${PORT:-3000}"]
