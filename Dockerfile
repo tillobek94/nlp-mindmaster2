@@ -7,7 +7,15 @@ WORKDIR /var/www/html
 COPY . .
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts
 RUN composer dump-autoload
+ENV APP_ENV=production
+ENV APP_DEBUG=false
 ENV APP_KEY="base64:WCsh7Denu0ebpDtZKxOpvuQL44dSLgdPYHl7yUUde4A="
+ENV DB_CONNECTION=mysql
+ENV DB_HOST=${MYSQLHOST}
+ENV DB_PORT=${MYSQLPORT}
+ENV DB_DATABASE=${MYSQLDATABASE}
+ENV DB_USERNAME=${MYSQLUSER}
+ENV DB_PASSWORD=${MYSQLPASSWORD}
 RUN chown -R www-data:www-data storage bootstrap/cache
 EXPOSE 3000
 CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=${PORT:-3000}"]
