@@ -47,14 +47,18 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # index.php ni DirectoryIndex ga qo'shish
 RUN sed -i 's/DirectoryIndex index.html/DirectoryIndex index.php index.html/' /etc/apache2/mods-enabled/dir.conf
 
-# Production tayyorlash
-RUN php artisan storage:link \
+# AVVAL CACHE TOZALASH, KEYIN CACHE QILISH
+RUN php artisan cache:clear \
+    && php artisan config:clear \
+    && php artisan route:clear \
+    && php artisan view:clear \
+    && php artisan storage:link \
     && php artisan config:cache \
-    && php artisan route:cache \
-    && php artisan view:cache
+    && php artisan route:cache
 
 # SQLite database yaratish (agar kerak bo'lsa)
-RUN touch database/database.sqlite
+RUN touch database/database.sqlite \
+    && chmod 755 database/database.sqlite
 
 EXPOSE 80
 
