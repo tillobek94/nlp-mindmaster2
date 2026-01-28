@@ -15,13 +15,17 @@ RUN apt-get update && apt-get install -y \
     unzip \
     git \
     curl \
-    libzip-dev \
-    sqlite3 \
-    libsqlite3-dev
+    libzip-dev
 
 # PHP extension lar
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
-RUN docker-php-ext-install pdo pdo_mysql pdo_sqlite gd zip
+RUN docker-php-ext-install pdo pdo_mysql gd zip
+
+# PHP error log yoqish
+RUN echo "error_reporting = E_ALL" >> /usr/local/etc/php/php.ini-production
+RUN echo "display_errors = On" >> /usr/local/etc/php/php.ini-production
+RUN echo "log_errors = On" >> /usr/local/etc/php/php.ini-production
+RUN echo "error_log = /var/log/php_errors.log" >> /usr/local/etc/php/php.ini-production
 
 # Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -47,18 +51,8 @@ RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf
 # index.php ni DirectoryIndex ga qo'shish
 RUN sed -i 's/DirectoryIndex index.html/DirectoryIndex index.php index.html/' /etc/apache2/mods-enabled/dir.conf
 
-# AVVAL CACHE TOZALASH, KEYIN CACHE QILISH
-RUN php artisan cache:clear \
-    && php artisan config:clear \
-    && php artisan route:clear \
-    && php artisan view:clear \
-    && php artisan storage:link \
-    && php artisan config:cache \
-    && php artisan route:cache
-
-# SQLite database yaratish (agar kerak bo'lsa)
-RUN touch database/database.sqlite \
-    && chmod 755 database/database.sqlite
+# Soddalashtirilgan cache
+RUN php artisan storage:link
 
 EXPOSE 80
 

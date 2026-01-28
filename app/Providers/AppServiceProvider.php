@@ -12,7 +12,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Hech narsa
     }
 
     /**
@@ -20,12 +20,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Agar SQLite bo'lsa
-        if ($this->app->runningInConsole() && config('database.default') === 'sqlite') {
-            $databasePath = config('database.connections.sqlite.database');
-            if (!file_exists($databasePath)) {
-                file_put_contents($databasePath, '');
+        // Database muammosini oldini olish
+        try {
+            // Agar database connection sozlanmagan bo'lsa
+            if (!config('database.default')) {
+                config(['database.default' => 'sqlite']);
             }
+        } catch (\Exception $e) {
+            // Xatoni log qilish
+            error_log('Database config error: ' . $e->getMessage());
         }
         
         // HTTPS force (production uchun)

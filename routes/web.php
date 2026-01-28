@@ -98,3 +98,12 @@ Route::middleware(['auth'])->prefix('admin')->group(function () {
 Route::fallback(function () {
     return redirect('/');
 });
+// Test route
+Route::get('/test', function () {
+    return 'Test page works!';
+});
+
+// Health check
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok', 'time' => now()]);
+});

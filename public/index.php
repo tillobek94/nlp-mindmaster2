@@ -1,37 +1,42 @@
 <?php
 
-use Illuminate\Contracts\Http\Kernel;
-use Illuminate\Http\Request;
+// Batafsil error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+ini_set('log_errors', '1');
 
 define('LARAVEL_START', microtime(true));
 
-// Error reporting yoqish
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-
 // Debug uchun
-if (!file_exists(__DIR__.'/../vendor/autoload.php')) {
-    die('Vendor autoload not found');
+echo "<!-- Debug: Starting Laravel -->\n";
+
+// Autoloader tekshirish
+$autoload = __DIR__.'/../vendor/autoload.php';
+if (!file_exists($autoload)) {
+    die('<h1>Error: Vendor autoload not found at: ' . $autoload . '</h1>');
 }
 
-require __DIR__.'/../vendor/autoload.php';
+require $autoload;
+echo "<!-- Debug: Autoload loaded -->\n";
 
-// Debug: composer yuklanganini tekshirish
-if (!class_exists('Illuminate\Foundation\Application')) {
-    die('Laravel classes not loaded');
-}
-
+// App yaratish
 $app = require_once __DIR__.'/../bootstrap/app.php';
+echo "<!-- Debug: App created -->\n";
 
-// Debug: app yaratilganini tekshirish
-if (!$app) {
-    die('Application not created');
-}
+// Kernel yaratish
+$kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
+echo "<!-- Debug: Kernel created -->\n";
 
-$kernel = $app->make(Kernel::class);
+// Request
+$request = Illuminate\Http\Request::capture();
+echo "<!-- Debug: Request captured -->\n";
 
-$response = $kernel->handle(
-    $request = Request::capture()
-)->send();
+// Response
+$response = $kernel->handle($request);
+echo "<!-- Debug: Response handled -->\n";
+
+$response->send();
+echo "<!-- Debug: Response sent -->\n";
 
 $kernel->terminate($request, $response);
+echo "<!-- Debug: Terminated -->\n";
