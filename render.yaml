@@ -11,8 +11,15 @@ services:
         value: false
       - key: APP_URL
         value: https://nlp-mindmaster2-1.onrender.com
+      - key: APP_KEY
+        value: base64:dEOL4EinNDqTncJa+uxL273U2s/7mG463crPfD/318w=
       - key: LOG_CHANNEL
         value: stderr
+      # Agar database ishlatmasangiz
+      - key: DB_CONNECTION
+        value: sqlite
+      - key: DB_DATABASE
+        value: /var/www/html/database/database.sqlite
     buildCommand: |
       composer install --no-dev --optimize-autoloader
       php artisan storage:link
