@@ -57,3 +57,6 @@ RUN php artisan storage:link
 EXPOSE 80
 
 CMD ["apache2-foreground"]
+
+# Database migration (agar kerak bo'lsa)
+RUN php artisan migrate --force 2>/dev/null || echo "Migration failed, continuing without database..."
