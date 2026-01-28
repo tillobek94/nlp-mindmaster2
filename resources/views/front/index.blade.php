@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<!-- resources/views/front/index.blade.php -->
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $settings->firstWhere('key', 'site_name')->value ?? 'Келажак инсонлари академияси' }} - Ҳаётингизни Трансформация қилинг</title>
+    <title>{{ ($settings->where('key', 'site_name')->first()->value ?? 'Келажак инсонлари академияси') }} - Ҳаётингизни Трансформация қилинг</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -631,7 +630,7 @@
         <nav class="nav-container">
             <div class="logo">
                 <i class="fas fa-brain logo-icon"></i>
-                <span>{{ $settings->firstWhere('key', 'site_name')->value ?? '“Келажак инсонлари академияси”' }}</span>
+                <span>{{ ($settings->where('key', 'site_name')->first()->value ?? 'Келажак инсонлари академияси') }}</span>
             </div>
             
             <ul>
@@ -639,13 +638,13 @@
                 <li><a href="{{ route('about') }}">Биз ҳақимизда</a></li>
                 <li><a href="#features">Хусусиятлар</a></li>
                 <li><a href="#results">Натижалар</a></li>
-                <li><a href="{{ route('contact') }}">Боғланиш</a></li> <!-- ✅ TUZATILDI -->
+                <li><a href="{{ route('contact') }}">Боғланиш</a></li>
                 @auth
                 <li><a href="{{ route('admin.dashboard') }}">Админ</a></li>
                 @endauth
             </ul>
             
-            <a href="{{ route('contact') }}" class="nav-cta">Боғланиш</a> <!-- ✅ TUZATILDI -->
+            <a href="{{ route('contact') }}" class="nav-cta">Боғланиш</a>
             
             <button class="mobile-menu-btn">
                 <i class="fas fa-bars"></i>
@@ -660,8 +659,8 @@
         <div class="container">
             <div class="hero-content">
                 <div class="hero-text">
-                    <h1>{{ $settings->firstWhere('key', 'hero_title')->value ?? 'Медитация ва амалиётлар маркази' }}</h1>
-                    <p>{{ $settings->firstWhere('key', 'hero_description')->value ?? '  Бу - минглаб аёллар ва эркаклар ўзлари ҳамда бутун олам билан уйғунликни топа олган жой. Балансни, энергиянгизни ва ичингиздаги бойликни топингИчки салоҳиятингизни очинг ва истиқболингизни яратинг.' }}</p>
+                    <h1>{{ ($settings->where('key', 'hero_title')->first()->value ?? 'Медитация ва амалиётлар маркази') }}</h1>
+                    <p>{{ ($settings->where('key', 'hero_description')->first()->value ?? 'Бу - минглаб аёллар ва эркаклар ўзлари ҳамда бутун олам билан уйғунликни топа олган жой. Балансни, энергиянгизни ва ичингиздаги бойликни топингИчки салоҳиятингизни очинг ва истиқболингизни яратинг.') }}</p>
                     
                     <div class="hero-features">
                         <div class="hero-feature">
@@ -700,8 +699,26 @@
                         <p>Илмий тадқиқотлар асосида ишлайдиган методлар</p>
                     </div>
                     <div class="floating-card glass">
-                        <h3>⭐ {{ $statistics->firstWhere('title_uz', 'like', '%Ўкувчи%')->number ?? '5000+' }} Ўкувчи</h3>
-                        <p>Дунёнинг {{ $statistics->firstWhere('title_uz', 'like', '%Мамлакат%')->number ?? '50+' }} мамлакатидан ижобий фикрлар</p>
+                        <h3>⭐ 
+                            @php
+                                $studentsStat = $statistics->first(function($item) {
+                                    return stripos($item->title_uz ?? '', 'Ўкувчи') !== false || 
+                                           stripos($item->title_uz ?? '', 'Student') !== false ||
+                                           stripos($item->title_uz ?? '', 'O\'quvchi') !== false;
+                                });
+                            @endphp
+                            {{ $studentsStat->number ?? '5000+' }} Ўкувчи
+                        </h3>
+                        <p>Дунёнинг 
+                            @php
+                                $countriesStat = $statistics->first(function($item) {
+                                    return stripos($item->title_uz ?? '', 'Мамлакат') !== false || 
+                                           stripos($item->title_uz ?? '', 'Country') !== false ||
+                                           stripos($item->title_uz ?? '', 'Mamlakat') !== false;
+                                });
+                            @endphp
+                            {{ $countriesStat->number ?? '50+' }} мамлакатидан ижобий фикрлар
+                        </p>
                     </div>
                 </div>
             </div>
@@ -712,12 +729,33 @@
     <section class="stats">
         <div class="container">
             <div class="stats-container">
-                @foreach($statistics as $statistic)
-                <div class="stat-card">
-                    <div class="stat-number" style="{{ $statistic->color ? 'color: ' . $statistic->color : '' }}">{{ $statistic->number }}</div>
-                    <p>{{ $statistic->title_uz }}</p>
-                </div>
-                @endforeach
+                @if(isset($statistics) && $statistics->count() > 0)
+                    @foreach($statistics as $statistic)
+                    <div class="stat-card">
+                        <div class="stat-number" style="{{ isset($statistic->color) && $statistic->color ? 'color: ' . $statistic->color : '' }}">
+                            {{ $statistic->number ?? '0' }}
+                        </div>
+                        <p>{{ $statistic->title_uz ?? 'Statistic' }}</p>
+                    </div>
+                    @endforeach
+                @else
+                    <div class="stat-card">
+                        <div class="stat-number">5000+</div>
+                        <p>Ўкувчи</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">50+</div>
+                        <p>Мамлакат</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">90%</div>
+                        <p>Ёкилғи</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">10+ йил</div>
+                        <p>Тажриба</p>
+                    </div>
+                @endif
             </div>
         </div>
     </section>
@@ -727,19 +765,43 @@
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title">Нимa Учун Aйнан Биз?</h2>
-                <p class="section-subtitle">Нега айнан “Talia Meditation”ни танлашади:</p>
+                <p class="section-subtitle">Нега айнан "NLP MindMaster"ни танлашади:</p>
             </div>
             
             <div class="features-grid">
-                @foreach($features as $feature)
-                <div class="feature-card">
-                    <div class="feature-icon">
-                        <i class="{{ $feature->icon }}"></i>
+                @if(isset($features) && $features->count() > 0)
+                    @foreach($features as $feature)
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="{{ $feature->icon ?? 'fas fa-star' }}"></i>
+                        </div>
+                        <h3>{{ $feature->title_uz ?? 'Feature' }}</h3>
+                        <p>{{ $feature->description_uz ?? 'Feature description' }}</p>
                     </div>
-                    <h3>{{ $feature->title_uz }}</h3>
-                    <p>{{ $feature->description_uz }}</p>
-                </div>
-                @endforeach
+                    @endforeach
+                @else
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h3>НЛП Технологиялари</h3>
+                        <p>Илмий асосланган нейролингвистик дастурлаш техникалари</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-graduate"></i>
+                        </div>
+                        <h3>Шахсий Ёндашув</h3>
+                        <p>Ҳар бир ўкувчи учун алоҳида ишланган дастур</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <h3>Натижадорлик</h3>
+                        <p>90% ёкилғи билан исботланган методлар</p>
+                    </div>
+                @endif
             </div>
         </div>
     </section>
@@ -753,33 +815,62 @@
             </div>
             
             <div class="testimonial-slider">
-                @foreach($testimonials as $testimonial)
-                <div class="testimonial-card">
-                    <div class="testimonial-text">
-                        "{{ $testimonial->content_uz }}"
-                    </div>
-                    <div class="testimonial-author">
-                        <div class="author-avatar">
-                            @if($testimonial->avatar)
-                                <img src="{{ asset('storage/' . $testimonial->avatar) }}" alt="{{ $testimonial->author_name }}" width="50" height="50" style="border-radius: 50%;">
-                            @else
-                                <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
-                                    {{ substr($testimonial->author_name, 0, 1) }}
-                                </div>
-                            @endif
+                @if(isset($testimonials) && $testimonials->count() > 0)
+                    @foreach($testimonials as $testimonial)
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "{{ $testimonial->content_uz ?? 'Ajoyib tajriba! Men o\'zimni butunlay o\'zgartirdim.' }}"
                         </div>
-                        <div>
-                            <h4>{{ $testimonial->author_name }}</h4>
-                            <p>{{ $testimonial->author_position }}</p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                @if(isset($testimonial->avatar) && $testimonial->avatar)
+                                    <img src="{{ asset('storage/' . $testimonial->avatar) }}" alt="{{ $testimonial->author_name ?? 'Mijoz' }}" width="50" height="50" style="border-radius: 50%;">
+                                @else
+                                    <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                        {{ substr($testimonial->author_name ?? 'M', 0, 1) }}
+                                    </div>
+                                @endif
+                            </div>
                             <div>
-                                @for($i = 1; $i <= 5; $i++)
-                                    <i class="fas fa-star {{ $i <= $testimonial->rating ? 'text-warning' : 'text-secondary' }}" style="color: {{ $i <= $testimonial->rating ? '#f59e0b' : '#64748b' }}"></i>
-                                @endfor
+                                <h4>{{ $testimonial->author_name ?? 'Maxfiy Mijoz' }}</h4>
+                                <p>{{ $testimonial->author_position ?? 'MBA' }}</p>
+                                <div>
+                                    @php
+                                        $rating = $testimonial->rating ?? 5;
+                                    @endphp
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <i class="fas fa-star" style="color: {{ $i <= $rating ? '#f59e0b' : '#64748b' }}"></i>
+                                    @endfor
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                @endforeach
+                    @endforeach
+                @else
+                    <div class="testimonial-card">
+                        <div class="testimonial-text">
+                            "Bu kurs mening hayotimni butunlay o'zgartirdi. Endi o'zimga ishonch hosil qildim va kariyeramda muvaffaqiyatga erishdim."
+                        </div>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">
+                                <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--gradient); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">
+                                    S
+                                </div>
+                            </div>
+                            <div>
+                                <h4>Sarvar</h4>
+                                <p>IT Menejeri</p>
+                                <div>
+                                    <i class="fas fa-star" style="color: #f59e0b"></i>
+                                    <i class="fas fa-star" style="color: #f59e0b"></i>
+                                    <i class="fas fa-star" style="color: #f59e0b"></i>
+                                    <i class="fas fa-star" style="color: #f59e0b"></i>
+                                    <i class="fas fa-star" style="color: #f59e0b"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </section>
@@ -792,7 +883,7 @@
                 <p class="cta-subtitle">Бугунги кун ўз-ўзингизга берадиган энг яхши инвестиция - ўзингизга инвестиция</p>
                 <a href="{{ route('contact') }}" class="btn-primary" style="background: white; color: var(--dark);">
                     <i class="fas fa-rocket"></i>
-                    BOG'LANISH SAHIFASIGA O'TISH <!-- ✅ TUZATILDI -->
+                    БОҒЛАНИШ САҲИФАСИГА ЎТИШ
                 </a>
             </div>
         </div>
@@ -805,7 +896,7 @@
                 <div class="footer-column">
                     <div class="logo">
                         <i class="fas fa-brain"></i>
-                        <span>{{ $settings->firstWhere('key', 'site_name')->value ?? 'Келажак инсонлари академияси' }}</span>
+                        <span>{{ ($settings->where('key', 'site_name')->first()->value ?? 'Келажак инсонлари академияси') }}</span>
                     </div>
                     <p>Шахсий ривожланиш ва НЛП технологиялари бўйича халқаро платформа.</p>
                     <div class="social-links">
@@ -820,11 +911,11 @@
                 <div class="footer-column">
                     <h3>Қулланма</h3>
                     <ul class="footer-links">
-                        <li><a href="{{ url('/') }}">Асосий</a></li> <!-- ✅ TUZATILDI -->
-                        <li><a href="{{ route('about') }}">Биз ҳақимизда</a></li> <!-- ✅ TUZATILDI -->
+                        <li><a href="{{ url('/') }}">Асосий</a></li>
+                        <li><a href="{{ route('about') }}">Биз ҳақимизда</a></li>
                         <li><a href="#features">Курслар</a></li>
                         <li><a href="#results">Натижалар</a></li>
-                        <li><a href="{{ route('contact') }}">Боғланиш</a></li> <!-- ✅ TUZATILDI -->
+                        <li><a href="{{ route('contact') }}">Боғланиш</a></li>
                     </ul>
                 </div>
                 
@@ -842,15 +933,15 @@
                 <div class="footer-column">
                     <h3>Боғланиш</h3>
                     <ul class="footer-links">
-                        <li><i class="fas fa-envelope"></i> {{ $settings->firstWhere('key', 'site_email')->value ?? 'info@nlpmindmaster.uz' }}</li>
-                        <li><i class="fas fa-phone"></i> {{ $settings->firstWhere('key', 'site_phone')->value ?? '+998785553007' }}</li>
-                        <li><i class="fas fa-map-marker-alt"></i> {{ $settings->firstWhere('key', 'site_address')->value ?? 'Тошкент, Ўзбекистон' }}</li>
+                        <li><i class="fas fa-envelope"></i> {{ ($settings->where('key', 'site_email')->first()->value ?? 'info@nlpmindmaster.uz') }}</li>
+                        <li><i class="fas fa-phone"></i> {{ ($settings->where('key', 'site_phone')->first()->value ?? '+998785553007') }}</li>
+                        <li><i class="fas fa-map-marker-alt"></i> {{ ($settings->where('key', 'site_address')->first()->value ?? 'Тошкент, Ўзбекистон') }}</li>
                     </ul>
                 </div>
             </div>
             
             <div class="copyright">
-                <p>© {{ date('Y') }} {{ $settings->firstWhere('key', 'site_name')->value ?? 'Келажак инсонлари академияси' }}. Барча ҳуқуқлар химояланган.</p>
+                <p>© {{ date('Y') }} {{ ($settings->where('key', 'site_name')->first()->value ?? 'Келажак инсонлари академияси') }}. Барча ҳуқуқлар химояланган.</p>
             </div>
         </div>
     </footer>
@@ -881,7 +972,7 @@
             }
         });
 
-        // Smooth scrolling (faqat # bilan boshlangan linklar uchun)
+        // Smooth scrolling
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -895,7 +986,6 @@
                         behavior: 'smooth'
                     });
                     
-                    // Close mobile menu if open
                     if (window.innerWidth <= 1024) {
                         nav.style.display = 'none';
                         mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
@@ -904,29 +994,14 @@
             });
         });
 
-        // CTA buttons (faqat #contact section'ga scroll qiladigan tugmalar uchun)
-        document.querySelectorAll('.btn-primary[href="#"], .btn-secondary[href="#"], .nav-cta[href="#"]').forEach(button => {
-            button.addEventListener('click', function() {
-                const formSection = document.querySelector('#contact');
-                if (formSection) {
-                    formSection.scrollIntoView({ behavior: 'smooth' });
-                    
-                    // Show success message
-                    setTimeout(() => {
-                        alert('Рахмат! Тез орада сиз билан боғланамиз. Биз сизга чақириқ қиламиз.');
-                    }, 1000);
-                }
-            });
-        });
-
-        // Testimonial slider auto-scroll
+        // Testimonial slider
         const slider = document.querySelector('.testimonial-slider');
         if (slider) {
             let scrollAmount = 0;
             
             function autoScrollTestimonials() {
                 if (slider.scrollWidth > slider.clientWidth) {
-                    scrollAmount += 410; // card width + gap
+                    scrollAmount += 410;
                     if (scrollAmount >= slider.scrollWidth - slider.clientWidth) {
                         scrollAmount = 0;
                     }
@@ -937,55 +1012,8 @@
                 }
             }
             
-            // Auto-scroll every 5 seconds
             setInterval(autoScrollTestimonials, 5000);
         }
-
-        // Add hover effects to all cards
-        document.querySelectorAll('.feature-card, .stat-card, .testimonial-card').forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-10px)';
-                this.style.boxShadow = '0 30px 60px rgba(99, 102, 241, 0.2)';
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
-                this.style.boxShadow = '';
-            });
-        });
-
-        // Animate elements on scroll
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -100px 0px'
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-
-        // Observe all feature cards and stats
-        document.querySelectorAll('.feature-card, .stat-card').forEach(el => {
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-            observer.observe(el);
-        });
-
-        // Contact sahifasiga yo'naltirish
-        document.querySelectorAll('a[href*="contact"]').forEach(link => {
-            if (!link.getAttribute('href').startsWith('#')) {
-                link.addEventListener('click', function(e) {
-                    // Faqat tekshirish uchun
-                    console.log('Contact sahifasiga yo\'naltirilmoqda:', this.href);
-                });
-            }
-        });
     </script>
 </body>
 </html>
