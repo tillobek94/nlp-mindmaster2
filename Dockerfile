@@ -1,14 +1,56 @@
 FROM php:8.2-apache
-RUN apt-get update && apt-get install -y git unzip zip libzip-dev
-RUN docker-php-ext-install pdo pdo_mysql zip
+
+# ServerName sozlash
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
+# Apache modlarini yoqish
 RUN a2enmod rewrite
+
+# Zarur kutubxonalar
+RUN apt-get update && apt-get install -y \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    zip \
+    unzip \
+    git \
+    curl \
+    libzip-dev
+
+# PHP extension lar
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+RUN docker-php-ext-install pdo pdo_mysql gd zip
+
+# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
 WORKDIR /var/www/html
-COPY composer.json composer.lock ./
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --no-scripts
+
+# Fayllarni nusxalash
 COPY . .
-ENV APP_ENV=production
-ENV APP_DEBUG=false
-ENV APP_KEY="base64:WCsh7Denu0ebpDtZKxOpvuQL44dSLgdPYHl7yUUde4A="
-RUN chown -R www-data:www-data storage bootstrap/cache
+
+# Composer paketlari
+RUN composer install --no-dev --optimize-autoloader
+
+# Papka huquqlari
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html/storage \
+    && chmod -R 755 /var/www/html/bootstrap/cache
+
+# BU QISM MUHIM: DocumentRoot public ga o'rnatish
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
+# BU HAM MUHIM: index.php ni DirectoryIndex ga qo'shish
+RUN sed -i 's/DirectoryIndex index.html/DirectoryIndex index.php index.html/' /etc/apache2/mods-enabled/dir.conf
+
+# Production tayyorlash
+RUN php artisan storage:link \
+    && php artisan config:cache \
+    && php artisan route:cache \
+    && php artisan view:cache
+
 EXPOSE 80
+
+CMD ["apache2-foreground"]
